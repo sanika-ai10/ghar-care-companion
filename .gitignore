@@ -8,3 +8,4 @@ build/
 *.mov
 *.log
 .DS_Store
+cache/

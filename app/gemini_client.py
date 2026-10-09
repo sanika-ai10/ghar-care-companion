@@ -159,9 +159,9 @@ async def call_gemini_api(
                 logger.warning(f"Model {model_name} returned 404, attempting fallback model.")
                 last_error = ValueError(f"Model {model_name} not found: {response.text}")
                 continue
-            elif response.status_code == 503:
-                logger.warning(f"Model {model_name} returned 503 (high demand), attempting fallback model.")
-                last_error = RuntimeError(f"Gemini API error (503): {response.text}")
+            elif response.status_code in (429, 503):
+                logger.warning(f"Model {model_name} returned {response.status_code}, attempting fallback model.")
+                last_error = RuntimeError(f"Gemini API error ({response.status_code}): {response.text}")
                 continue
             else:
                 logger.error(f"Gemini API returned HTTP {response.status_code}: {response.text}")
@@ -217,6 +217,8 @@ async def extract_recovery_plan(
         return data, False
     except Exception as err:
         logger.warning(f"Attempt 1 JSON parsing/calling failed: {err}. Retrying once...")
+        if "429" in str(err) or "RESOURCE_EXHAUSTED" in str(err):
+            raise RuntimeError("Daily AI limit reached. Please try again later or switch on Demo Mode.")
 
     # Attempt 2 (Retry once as per requirement 6)
     try:
@@ -233,6 +235,8 @@ async def extract_recovery_plan(
     except Exception as retry_err:
         logger.error(f"Attempt 2 failed: {retry_err}")
         err_msg = str(retry_err)
+        if "429" in err_msg or "RESOURCE_EXHAUSTED" in err_msg:
+            raise RuntimeError("Daily AI limit reached. Please try again later or switch on Demo Mode.")
         if "503" in err_msg or "UNAVAILABLE" in err_msg or "temporarily unavailable" in err_msg.lower():
             raise RuntimeError("Gemini service is temporarily unavailable. Please try again later.")
         # As per requirement 6: "If the JSON is invalid, retry once, then show 'Please retake the photo'."

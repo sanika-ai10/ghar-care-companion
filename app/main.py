@@ -1,3 +1,5 @@
+import hashlib
+import json
 import os
 from pathlib import Path
 from typing import Optional
@@ -27,6 +29,12 @@ app.add_middleware(
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 STATIC_DIR = BASE_DIR / "static"
+CACHE_DIR = BASE_DIR / "cache"
+
+
+def _cache_path(image_bytes: bytes, lang: str) -> Path:
+    h = hashlib.sha256(image_bytes).hexdigest()[:20]
+    return CACHE_DIR / f"{h}_{lang.lower()}.json"
 
 
 @app.get("/api/config")
@@ -106,6 +114,20 @@ async def extract_document(
     if not mime_type.startswith("image/"):
         mime_type = "image/jpeg"
 
+    if not demo_active:
+        cp = _cache_path(image_bytes, lang_normalized)
+        if cp.exists():
+            try:
+                return {
+                    "status": "success",
+                    "demo_mode": False,
+                    "cached": True,
+                    "language": lang_normalized,
+                    "data": json.loads(cp.read_text(encoding="utf-8")),
+                }
+            except Exception:
+                pass
+
     try:
         plan, used_demo = await extract_recovery_plan(
             image_bytes=image_bytes,
@@ -113,6 +135,14 @@ async def extract_document(
             language=lang_normalized,
             demo_mode_override=demo_mode,
         )
+
+        if not used_demo and os.getenv("CACHE_SAVE", "").strip().lower() in ("true", "1", "yes"):
+            try:
+                CACHE_DIR.mkdir(exist_ok=True)
+                _cache_path(image_bytes, lang_normalized).write_text(
+                    json.dumps(plan, ensure_ascii=False), encoding="utf-8")
+            except Exception:
+                pass
 
         return {
             "status": "success",
@@ -131,6 +161,14 @@ async def extract_document(
                 "message": error_msg,
                 "detail": error_msg,
             },
+        )
+    except RuntimeError as rt_err:
+        msg = str(rt_err)
+        if not msg.startswith(("Daily AI limit", "Gemini service")):
+            msg = "The AI service had a problem. Please try again."
+        return JSONResponse(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            content={"status": "error", "message": msg, "detail": msg},
         )
     except Exception as exc:
         return JSONResponse(
