@@ -52,16 +52,17 @@ def load_system_prompt(language: str = "English") -> str:
     return prompt_text.replace("{LANGUAGE}", language)
 
 
+
 def clean_and_parse_json(raw_text: str) -> Dict[str, Any]:
     """
-    Parse JSON from model response, stripping markdown fences or stray commentary.
-    Raises ValueError / json.JSONDecodeError if invalid.
+    Parse a JSON object from the model response.
+    Supports Markdown fences and commentary around an object.
+    Rejects valid JSON arrays and other non-object JSON values.
     """
     cleaned = raw_text.strip()
 
-    # Strip code block fences if present
+    # Strip Markdown code fences if present.
     if cleaned.startswith("```"):
-        # Remove first line (e.g. ```json or ```)
         lines = cleaned.splitlines()
         if len(lines) > 2 and lines[-1].strip().startswith("```"):
             cleaned = "\n".join(lines[1:-1]).strip()
@@ -69,25 +70,31 @@ def clean_and_parse_json(raw_text: str) -> Dict[str, Any]:
             cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned)
             cleaned = re.sub(r"\s*```$", "", cleaned)
 
-    # First attempt: standard json.loads
+    # If the entire response is valid JSON, it must be an object.
     try:
         data = json.loads(cleaned)
+    except json.JSONDecodeError:
+        data = None
+    else:
         if isinstance(data, dict):
             return data
-    except Exception:
-        pass
+        raise ValueError("Model response must be a JSON object")
 
-    # Second attempt: locate outer JSON object boundaries { ... }
+    # Otherwise, look for an object surrounded by commentary.
     first_brace = cleaned.find("{")
     last_brace = cleaned.rfind("}")
-    if first_brace != -1 and last_brace != -1 and last_brace > first_brace:
-        candidate = cleaned[first_brace : last_brace + 1]
-        data = json.loads(candidate)
+
+    if first_brace != -1 and last_brace > first_brace:
+        candidate = cleaned[first_brace:last_brace + 1]
+        try:
+            data = json.loads(candidate)
+        except json.JSONDecodeError as exc:
+            raise ValueError("Invalid JSON output received from model") from exc
+
         if isinstance(data, dict):
             return data
 
     raise ValueError("Invalid JSON output received from model")
-
 
 async def call_gemini_api(
     image_bytes: bytes,
