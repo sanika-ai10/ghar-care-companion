@@ -1,134 +1,65 @@
-# Recovery Companion 🩺
+# Recovery Companion
 
-A mobile-friendly healthcare web app that converts hospital discharge summaries and prescriptions into a simple, patient-friendly home recovery plan in **English**, **Hindi (हिन्दी)**, and **Kannada (ಕನ್ನಡ)**.
+An AI recovery companion that helps patients understand their hospital discharge papers in their own language, and keeps their family informed when a dose is taken or missed.
 
-Built with a **Python FastAPI** backend and a lightweight **HTML/CSS/JS** frontend.
+Built for PromptWars x Error Zero (Theme: AI for Healthcare Accessibility).
 
----
+## The problem
 
-## ✨ Features (Step 1)
+Patients leave hospital with a dense, jargon-filled discharge summary and a few minutes of verbal instructions. Many, especially elderly patients and people who do not read English comfortably, misunderstand their medicines, miss warning signs, or forget follow-ups. This is a common cause of avoidable readmissions.
 
-1. **Document Upload & Mobile Camera Capture**:
-   - Take a photo directly on mobile or upload prescription / discharge summary images (`JPEG`, `PNG`, `WEBP`).
-   - Drag-and-drop support and instant image preview.
-   - Quick one-tap **"Try with Sample Discharge Summary"** button for instant testing.
+## What it does
 
-2. **Multilingual Patient Language Support**:
-   - Select between **English**, **हिन्दी (Hindi)**, or **ಕನ್ನಡ (Kannada)**.
-   - Automatically injects the selected language into `prompts/01_extraction_prompt.md`.
+1. **Understand:** upload a photo of a discharge summary or prescription. Gemini turns it into a simple plan in English, Hindi or Kannada: summary, medicine schedule with clock times, follow-ups, warning signs, diet and activity, and hospital contacts.
+2. **Read aloud:** the plan can be spoken using the browser's speech synthesis.
+3. **Be honest about uncertainty:** unclear lines and missing information (for example no follow-up date) go into a "Things we're not sure about" card instead of being guessed.
+4. **Track doses:** each scheduled dose has a "Taken" button.
+5. **Keep family informed (with consent):** when the patient ticks "Tell my family", taking a dose sends a message to a family member's Telegram. A demo button simulates a missed-dose alert.
 
-3. **Gemini Vision API Extraction & Robust Retries**:
-   - Sends document images with the specialized medical extraction prompt.
-   - Requests structured JSON output.
-   - **Automatic Retry**: If the model output is malformed or invalid JSON, it retries once. If it still fails, it displays: *"Please retake the photo"* alongside practical photo-taking tips.
+## Safety and privacy by design
 
-4. **Structured Patient Recovery Plan**:
-   - 📋 **Summary**: Diagnosis, procedure, patient details, and simple 3-sentence summary with doctor disclaimer.
-   - 💊 **Medicine Schedule**: Visual schedule with dosages, clock times (08:00, 20:00), food instructions (before/after meals), purpose in plain language, critical medicine warnings, and time-of-day filters (Morning, Afternoon, Night, As Needed).
-   - 🗓️ **Follow-ups & Next Steps**: Upcoming appointments, clinic locations, and what to bring.
-   - 🚨 **Warning Signs (Red Flags)**: Urgency indicators (Emergency vs. Call Doctor), symptoms to watch for, and exact actions to take.
-   - 🔍 **"Things We're Not Sure About" Card**: Highlights unclear handwriting, faint notes, and missing information with advice to confirm with doctor/pharmacist.
-   - 🩺 **Home Monitoring & Emergency Contacts**: Temperature, blood pressure, wound checks, and clickable hospital phone numbers.
+- The extraction prompt (`prompts/01_extraction_prompt.md`) tells the model to use only what is in the document, never to diagnose, never to invent doses or dates, and to flag anything unclear.
+- Missed-dose messages tell the family to call the patient and ask the doctor or pharmacist. They never suggest taking extra doses.
+- Family alerts are opt-in through a checkbox the patient controls.
+- API keys and the Telegram token live only on the server in `.env`. They are never sent to the browser or committed.
+- The app does not store uploaded documents. The image is sent to the Gemini API for analysis only. Dose taps are stored in the user's own browser.
+- This is an informational tool, not medical advice.
 
-5. **Audio "Read Aloud" Button**:
-   - Uses the browser's built-in **Web Speech API** (`window.speechSynthesis`).
-   - Automatically adapts voice and speech accents to the selected language (`en-IN`, `hi-IN`, `kn-IN`).
-   - Interactive Play / Stop controls with animated audio waveform status.
+## What works today, and what does not
 
-6. **Zero-API-Key DEMO_MODE**:
-   - Reads the Gemini API key securely from `.env` (never hardcoded).
-   - Automatically switches to `DEMO_MODE` if no API key is provided, or if `DEMO_MODE=true` is set.
-   - Toggle switch in header allows users to switch to Demo Mode anytime.
-   - Complete realistic sample recovery plans provided in English, Hindi, and Kannada.
+Working:
+- Photo to plan with Gemini, in three languages, with read-aloud
+- Model fallback when a Gemini model is busy
+- "Taken" buttons and Telegram family alerts
+- Demo mode with a saved sample plan, so the app runs without any API key
 
----
+Demo or not built yet:
+- The missed-dose alert is triggered by a demo button, not an automatic timer
+- Phone push reminders, a blood-pressure log, grounded Q&A chat and a weekly doctor summary are planned, not built
+- Doses are saved per browser, not in an account
 
-## 🚀 Getting Started
+## Tech
 
-### 1. Prerequisites
-- Python 3.10 or higher
-- Modern web browser (Chrome, Safari, Edge, Firefox)
+Python FastAPI backend, plain HTML/CSS/JavaScript frontend, Google Gemini API, Telegram Bot API.
 
-### 2. Installation
+## Run it
 
-Clone or open the repository:
-```bash
-cd ghar-care-companion
 ```
-
-Install the minimal dependencies:
-```bash
 pip install -r requirements.txt
+cp .env.example .env
+python3 -m uvicorn app.main:app --reload --port 8000
 ```
 
-*(Dependencies: `fastapi`, `uvicorn`, `python-multipart`, `python-dotenv`, `httpx`)*
+Open http://127.0.0.1:8000
 
----
+- With `DEMO_MODE=true` (the default in `.env.example`) the app shows a saved sample plan and needs no keys.
+- For real analysis, set `GEMINI_API_KEY` and `DEMO_MODE=false` in `.env`.
+- For family alerts, create a bot with @BotFather, put its token in `TELEGRAM_BOT_TOKEN`, press Start on the bot from the family member's phone, and set `TELEGRAM_CHAT_ID` to that chat's ID.
 
-### 3. Environment Configuration (`.env`)
+Sample test documents (fake data) are in `sample_docs/`.
 
-Create or edit the `.env` file in the project root:
+## How it was built
 
-```env
-# Gemini API Key (get one from Google AI Studio: https://aistudio.google.com/)
-GEMINI_API_KEY=your_actual_gemini_api_key_here
+Built with AI-assisted prompting. The extraction prompt is in `prompts/`.
 
-# Optional: set to true to force demo mode without calling Gemini API
-DEMO_MODE=false
-
-# Optional: customize model (default: gemini-2.5-flash with fallback to gemini-1.5-flash)
-GEMINI_MODEL=gemini-2.5-flash
-```
-
-> **Note:** If `GEMINI_API_KEY` is not set or left empty, the application will automatically run in **DEMO_MODE**, returning rich sample data in your chosen language!
-
----
-
-### 4. Running the Application
-
-Start the FastAPI backend with Uvicorn:
-
-```bash
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-Open your browser at:
-```
-http://localhost:8000
-```
-*(On mobile devices connected to the same Wi-Fi, open `http://<your-computer-ip>:8000`)*
-
----
-
-## 📂 Project Structure
-
-```
-ghar-care-companion/
-├── app/
-│   ├── __init__.py
-│   ├── main.py              # FastAPI server, endpoints, and static file routing
-│   ├── gemini_client.py     # Gemini Vision API integration, prompt formatting & retry logic
-│   └── sample_data.py       # Realistic sample plans in English, Hindi, and Kannada
-├── prompts/
-│   └── 01_extraction_prompt.md  # Core extraction prompt with {LANGUAGE} parameter
-├── static/
-│   ├── css/
-│   │   └── style.css        # Mobile-friendly, accessible CSS design
-│   ├── js/
-│   │   └── app.js           # Client UI interactions, API requests, Speech Synthesis
-│   └── index.html           # Main Single Page Application interface
-├── .env                     # Local environment variables
-├── .gitignore
-├── requirements.txt         # Minimal dependency list
-└── README.md                # Documentation and run instructions
-```
-
----
-
-## 📡 API Endpoints
-
-- `GET /` — Serves the mobile-friendly web app.
-- `GET /api/config` — Checks if API key is configured and returns demo mode status.
-- `GET /api/sample/{language}` — Fetches pre-computed sample recovery plan (`English`, `Hindi`, `Kannada`).
-- `POST /api/extract` — Accepts `file` (photo) and `language`. Processes through Gemini or Demo Mode. Returns structured recovery JSON.
-  - Returns `422 Unprocessable Entity` with `"Please retake the photo"` if image text cannot be parsed into valid JSON after retry.
+All patient names, documents and numbers in this repository are fictional.
