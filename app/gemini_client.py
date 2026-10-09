@@ -16,6 +16,7 @@ load_dotenv(override=True)
 
 logger = logging.getLogger("recovery_companion")
 logging.basicConfig(level=logging.INFO)
+logging.getLogger("httpx").setLevel(logging.WARNING)
 
 PROMPT_FILE = Path(__file__).resolve().parent.parent / "prompts" / "01_extraction_prompt.md"
 
