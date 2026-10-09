@@ -82,3 +82,9 @@ All patient names, documents and numbers in this repository are fictional.
 
 ## Optional demo cache
 The app calls Gemini live for every document. For the two fixed sample documents, an optional local cache (the `cache/` folder, enabled with `CACHE_SAVE=true`) can replay a saved result to speed up demos. It is not committed to the repo, and any new document always goes through live Gemini analysis.
+
+## Live demo
+
+Deployed on Google Cloud Run: https://recovery-companion-327468153951.asia-south1.run.app
+
+The hosted version runs in demo mode (saved sample plans, no API keys). To use live Gemini analysis and Telegram alerts, run it locally with your own keys as described above.
