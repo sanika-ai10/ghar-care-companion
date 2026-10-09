@@ -14,6 +14,10 @@ Built for PromptWars x Error Zero (Theme: AI for Healthcare Accessibility).
 |---|---|
 | ![Warning signs](docs/screenshot-3.png) | ![Monitoring](docs/screenshot-4.png) |
 
+**Family alerts on Telegram** (real messages sent to the family member's phone: dose taken, and automatic missed-dose warnings):
+
+<img src="docs/screenshot-5.png" width="320" alt="Telegram family alerts">
+
 (All patient data shown is fictional.)
 
 ## The problem
