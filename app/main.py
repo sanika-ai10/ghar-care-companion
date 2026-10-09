@@ -143,6 +143,45 @@ async def extract_document(
         )
 
 
+import httpx
+from pydantic import BaseModel
+
+
+class NotifyRequest(BaseModel):
+    kind: str
+    patient: str = "The patient"
+    medicine: str = ""
+    time: str = ""
+
+
+@app.post("/api/notify")
+async def notify_family(req: NotifyRequest):
+    token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
+    chat_id = os.getenv("TELEGRAM_CHAT_ID", "").strip()
+    if not token or not chat_id:
+        return JSONResponse(status_code=503, content={"status": "error", "message": "Family alerts are not set up."})
+    who = req.patient.strip()[:40] or "The patient"
+    med = req.medicine.strip()[:60]
+    when = req.time.strip()[:20]
+    if req.kind == "taken":
+        text = f"✅ {who} took {med} ({when})."
+    elif req.kind == "missed":
+        text = (f"⚠️ {who} has not confirmed the {when} dose of {med}. "
+                "Please call to check. Do not suggest taking extra doses; "
+                "ask the doctor or pharmacist if unsure.")
+    else:
+        return JSONResponse(status_code=400, content={"status": "error", "message": "Unknown alert type."})
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            r = await client.post(f"https://api.telegram.org/bot{token}/sendMessage",
+                                  json={"chat_id": chat_id, "text": text})
+        if r.status_code != 200:
+            return JSONResponse(status_code=502, content={"status": "error", "message": "Telegram refused the message."})
+    except Exception:
+        return JSONResponse(status_code=502, content={"status": "error", "message": "Could not reach Telegram."})
+    return {"status": "sent"}
+
+
 # Mount static files
 if STATIC_DIR.exists():
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")

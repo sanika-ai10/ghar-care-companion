@@ -1295,3 +1295,12 @@ body {
   cursor: pointer; min-height: 44px;
 }
 .dose-btn.taken { background: #e3f6ea; border-color: #2e9e5b; color: #1d6b3c; }
+
+
+/* Family alerts bar */
+.family-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+  margin: 12px 0; padding: 12px; border-radius: 12px; background: #eef6f4; border: 1px solid #cfe3de; }
+.family-toggle { font-size: 0.9rem; font-weight: 600; color: #1f5f56; }
+.family-demo-btn { padding: 8px 12px; border-radius: 8px; border: 1.5px dashed #b45309;
+  background: #fff7ed; color: #92400e; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+.family-status { font-size: 0.85rem; color: #4b5f5c; }

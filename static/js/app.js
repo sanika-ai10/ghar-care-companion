@@ -404,6 +404,7 @@ function renderRecoveryPlan(plan, isDemo = false) {
   elements.plainSummaryText.textContent = plan.summary_plain || '';
 
   // 2. Medicines
+  window.__patientName = plan.patient_first_name || 'The patient';
   renderMedicines(plan.medicines || []);
 
   // 3. Follow-ups
@@ -821,6 +822,7 @@ function saveDose(key, value) {
   } catch (e) { /* storage unavailable: ignore */ }
 }
 function addDoseButtons(card, med) {
+  ensureFamilyBar();
   const times = (med.suggested_clock_times && med.suggested_clock_times.length)
     ? med.suggested_clock_times
     : (med.as_needed ? ['As needed'] : []);
@@ -840,6 +842,8 @@ function addDoseButtons(card, med) {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'dose-btn';
+    btn.dataset.time = t;
+    btn.dataset.med = med.name_as_written;
     const render = () => {
       const takenAt = loadDose(key);
       btn.classList.toggle('taken', !!takenAt);
@@ -850,6 +854,7 @@ function addDoseButtons(card, med) {
         saveDose(key, null);
       } else {
         saveDose(key, new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+        sendFamilyAlert('taken', med.name_as_written, t);
       }
       render();
     });
@@ -858,4 +863,49 @@ function addDoseButtons(card, med) {
   });
   box.appendChild(row);
   card.appendChild(box);
+}
+
+
+// ---- Family alerts (sent to Telegram through /api/notify) ----
+function familyAlertsOn() {
+  try { return localStorage.getItem('familyAlerts') !== 'off'; } catch (e) { return true; }
+}
+function setFamilyStatus(msg) {
+  const el = document.getElementById('familyStatus');
+  if (el) el.textContent = msg;
+}
+async function sendFamilyAlert(kind, medName, time) {
+  if (!familyAlertsOn()) return;
+  try {
+    const res = await fetch('/api/notify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ kind, patient: window.__patientName || 'The patient', medicine: medName, time }),
+    });
+    setFamilyStatus(res.ok ? 'Family alert sent ✓' : 'Could not send family alert');
+  } catch (e) {
+    setFamilyStatus('Could not send family alert');
+  }
+}
+function ensureFamilyBar() {
+  if (document.getElementById('familyBar')) return;
+  const bar = document.createElement('div');
+  bar.id = 'familyBar';
+  bar.className = 'family-bar';
+  bar.innerHTML = `
+    <label class="family-toggle"><input type="checkbox" id="familyToggle"> Tell my family when I take or miss a dose</label>
+    <button type="button" id="familyDemoBtn" class="family-demo-btn">Demo: simulate a missed dose</button>
+    <span id="familyStatus" class="family-status"></span>`;
+  elements.medicineList.before(bar);
+  const tog = bar.querySelector('#familyToggle');
+  tog.checked = familyAlertsOn();
+  tog.addEventListener('change', () => {
+    try { localStorage.setItem('familyAlerts', tog.checked ? 'on' : 'off'); } catch (e) {}
+  });
+  bar.querySelector('#familyDemoBtn').addEventListener('click', () => {
+    const btn = Array.from(document.querySelectorAll('.dose-btn:not(.taken)'))
+      .find((b) => /^\d/.test(b.dataset.time || ''));
+    if (!btn) { setFamilyStatus('No pending dose to simulate'); return; }
+    sendFamilyAlert('missed', btn.dataset.med, btn.dataset.time);
+  });
 }
