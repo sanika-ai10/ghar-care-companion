@@ -499,6 +499,7 @@ function renderMedicines(medicines) {
       ` : ''}
     `;
 
+    addDoseButtons(card, med);
     elements.medicineList.appendChild(card);
   });
 }
@@ -802,4 +803,59 @@ function escapeHtml(text) {
   const div = document.createElement('div');
   div.textContent = String(text);
   return div.innerHTML;
+}
+
+
+// ---- Dose tracking: "Taken" buttons (saved in this browser, per day) ----
+function doseKey(med, time) {
+  const today = new Date().toLocaleDateString('en-CA');
+  return `dose:${today}:${med.name_as_written}:${time}`;
+}
+function loadDose(key) {
+  try { return localStorage.getItem(key); } catch (e) { return null; }
+}
+function saveDose(key, value) {
+  try {
+    if (value) localStorage.setItem(key, value);
+    else localStorage.removeItem(key);
+  } catch (e) { /* storage unavailable: ignore */ }
+}
+function addDoseButtons(card, med) {
+  const times = (med.suggested_clock_times && med.suggested_clock_times.length)
+    ? med.suggested_clock_times
+    : (med.as_needed ? ['As needed'] : []);
+  if (!times.length) return;
+
+  const box = document.createElement('div');
+  box.className = 'dose-box';
+  const title = document.createElement('div');
+  title.className = 'dose-title';
+  title.textContent = med.as_needed ? 'Log a dose' : "Today's doses";
+  box.appendChild(title);
+
+  const row = document.createElement('div');
+  row.className = 'dose-row';
+  times.forEach((t) => {
+    const key = doseKey(med, t);
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'dose-btn';
+    const render = () => {
+      const takenAt = loadDose(key);
+      btn.classList.toggle('taken', !!takenAt);
+      btn.textContent = takenAt ? `✅ ${t} taken at ${takenAt}` : `${t} - Tap when taken`;
+    };
+    btn.addEventListener('click', () => {
+      if (loadDose(key)) {
+        saveDose(key, null);
+      } else {
+        saveDose(key, new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+      }
+      render();
+    });
+    render();
+    row.appendChild(btn);
+  });
+  box.appendChild(row);
+  card.appendChild(box);
 }

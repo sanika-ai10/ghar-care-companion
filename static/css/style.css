@@ -1283,3 +1283,15 @@ body {
     flex-direction: column;
   }
 }
+
+
+/* Dose tracking buttons */
+.dose-box { margin-top: 12px; padding-top: 10px; border-top: 1px dashed #cfdcd9; }
+.dose-title { font-size: 0.8rem; font-weight: 600; color: #4b5f5c; margin-bottom: 8px; }
+.dose-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.dose-btn {
+  padding: 10px 14px; border-radius: 10px; border: 1.5px solid #2f7d73;
+  background: #ffffff; color: #1f5f56; font-size: 0.95rem; font-weight: 600;
+  cursor: pointer; min-height: 44px;
+}
+.dose-btn.taken { background: #e3f6ea; border-color: #2e9e5b; color: #1d6b3c; }
