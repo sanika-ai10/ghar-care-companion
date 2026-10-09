@@ -10,7 +10,7 @@ Patients leave hospital with a dense, jargon-filled discharge summary and a few 
 
 ## What it does
 
-1. **Understand:** upload a photo of a discharge summary or prescription. Gemini turns it into a simple plan in English, Hindi or Kannada: summary, medicine schedule with clock times, follow-ups, warning signs, diet and activity, and hospital contacts.
+1. **Understand:** upload a photo of a discharge summary or prescription. Gemini turns it into a simple plan in English, Hindi or Kannada: summary, medicine schedule with clock times and a plain-language note on what each medicine is for, follow-ups, warning signs, diet and activity, and hospital contacts.
 2. **Read aloud:** the plan can be spoken using the browser's speech synthesis.
 3. **Be honest about uncertainty:** unclear lines and missing information (for example no follow-up date) go into a "Things we're not sure about" card instead of being guessed.
 4. **Track doses:** each scheduled dose has a "Taken" button.
