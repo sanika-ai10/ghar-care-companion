@@ -43,10 +43,10 @@ Working:
 - Photo to plan with Gemini, in three languages, with read-aloud
 - Model fallback when a Gemini model is busy
 - "Taken" buttons and Telegram family alerts
+- Automatic missed-dose alerts: 30 minutes after a scheduled dose is not tapped as taken, a Telegram alert is sent once. This runs while the page is open (alerts with the browser closed would need a server-side scheduler). A demo button sends one instantly.
 - Demo mode with a saved sample plan, so the app runs without any API key
 
 Demo or not built yet:
-- The missed-dose alert is triggered by a demo button, not an automatic timer
 - Phone push reminders, a blood-pressure log, grounded Q&A chat and a weekly doctor summary are planned, not built
 - Doses are saved per browser, not in an account
 

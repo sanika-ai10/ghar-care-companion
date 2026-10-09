@@ -822,6 +822,7 @@ function saveDose(key, value) {
   } catch (e) { /* storage unavailable: ignore */ }
 }
 function addDoseButtons(card, med) {
+  window.__planLoadedAt = Date.now();
   ensureFamilyBar();
   const times = (med.suggested_clock_times && med.suggested_clock_times.length)
     ? med.suggested_clock_times
@@ -909,3 +910,28 @@ function ensureFamilyBar() {
     sendFamilyAlert('missed', btn.dataset.med, btn.dataset.time);
   });
 }
+
+
+// ---- Automatic missed-dose check (runs while this page is open) ----
+const MISSED_GRACE_MIN = (() => {
+  const g = parseInt(new URLSearchParams(location.search).get('grace'), 10);
+  return Number.isFinite(g) && g >= 0 ? g : 30;
+})();
+function checkMissedDoses() {
+  if (!familyAlertsOn()) return;
+  const now = Date.now();
+  const today = new Date().toLocaleDateString('en-CA');
+  document.querySelectorAll('.dose-btn:not(.taken)').forEach((btn) => {
+    const m = /^(\d{1,2}):(\d{2})$/.exec(btn.dataset.time || '');
+    if (!m) return;
+    const due = new Date();
+    due.setHours(parseInt(m[1], 10), parseInt(m[2], 10), 0, 0);
+    if (due.getTime() < (window.__planLoadedAt || 0)) return;
+    if (now < due.getTime() + MISSED_GRACE_MIN * 60000) return;
+    const sentKey = `missedSent:${today}:${btn.dataset.med}:${btn.dataset.time}`;
+    if (loadDose(sentKey)) return;
+    saveDose(sentKey, '1');
+    sendFamilyAlert('missed', btn.dataset.med, btn.dataset.time);
+  });
+}
+setInterval(checkMissedDoses, 30000);
