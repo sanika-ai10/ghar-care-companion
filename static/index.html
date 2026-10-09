@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Recovery Companion — Medical Discharge & Prescription Guide</title>
+  <meta name="description" content="Turn complex hospital discharge summaries and prescriptions into a simple, personalized recovery plan.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;600;700&family=Noto+Sans+Kannada:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <!-- Top Navigation Bar -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+            <path d="M12 9v4"/>
+            <path d="M10 11h4"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="brand-title">Recovery Companion</h1>
+          <p class="brand-subtitle">Care Guide & Medicine Tracker</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <label class="demo-toggle" title="Toggle Demo Mode">
+          <input type="checkbox" id="demoModeToggle">
+          <span class="toggle-slider"></span>
+          <span class="demo-label">Demo Mode</span>
+        </label>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-container">
+    <!-- UPLOAD & SETUP SECTION -->
+    <section id="uploadSection" class="card upload-card">
+      <div class="card-intro">
+        <span class="step-badge">Step 1</span>
+        <h2>Upload Medical Document</h2>
+        <p class="card-description">
+          Take a photo or upload a hospital discharge summary or prescription to get your step-by-step home recovery plan.
+        </p>
+      </div>
+
+      <!-- Language Selector -->
+      <div class="form-group">
+        <label class="form-label">
+          <span class="label-icon">🌐</span> Choose Your Language:
+        </label>
+        <div class="language-selector" role="radiogroup" aria-label="Select preferred language">
+          <label class="lang-option active">
+            <input type="radio" name="language" value="English" checked>
+            <span class="lang-text">English</span>
+          </label>
+          <label class="lang-option">
+            <input type="radio" name="language" value="Hindi">
+            <span class="lang-text">हिन्दी (Hindi)</span>
+          </label>
+          <label class="lang-option">
+            <input type="radio" name="language" value="Kannada">
+            <span class="lang-text">ಕನ್ನಡ (Kannada)</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- File Upload Dropzone -->
+      <div class="form-group">
+        <label class="form-label">
+          <span class="label-icon">📷</span> Photo of Document:
+        </label>
+        <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Upload photo or take a picture">
+          <input type="file" id="fileInput" accept="image/*" capture="environment" class="file-input-hidden">
+          
+          <div id="dropzoneEmpty" class="dropzone-content">
+            <div class="upload-icon-circle">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+            </div>
+            <p class="dropzone-title">Tap to take photo or choose file</p>
+            <p class="dropzone-hint">Supports PNG, JPG, JPEG, WEBP</p>
+            <span class="btn-browse">Browse Files</span>
+          </div>
+
+          <div id="dropzonePreview" class="dropzone-preview hidden">
+            <img id="imagePreview" alt="Document preview" class="preview-img">
+            <div class="preview-info">
+              <div class="file-meta">
+                <span id="fileName" class="file-name">document.jpg</span>
+                <span id="fileSize" class="file-size">1.2 MB</span>
+              </div>
+              <button type="button" id="removeFileBtn" class="btn-remove" aria-label="Remove uploaded image">✕ Remove</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Sample Document Action -->
+      <div class="sample-action-box">
+        <span>No prescription on hand right now?</span>
+        <button type="button" id="useSampleBtn" class="btn-text-action">
+          ⚡ Try with Sample Discharge Summary
+        </button>
+      </div>
+
+      <!-- Submit Action -->
+      <div class="action-footer">
+        <button type="button" id="submitBtn" class="btn-primary btn-block">
+          <span class="btn-icon">✨</span>
+          <span class="btn-text">Generate Recovery Plan</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- LOADING STATE -->
+    <section id="loadingSection" class="card loading-card hidden">
+      <div class="loading-spinner"></div>
+      <h3 id="loadingStatusTitle">Analyzing your medical document...</h3>
+      <p id="loadingStatusDesc" class="loading-desc">Our AI is reading the prescriptions, dosages, and doctor notes.</p>
+      
+      <div class="progress-steps">
+        <div class="step-item active" id="step1">
+          <span class="step-dot"></span>
+          <span>Scanning document image</span>
+        </div>
+        <div class="step-item" id="step2">
+          <span class="step-dot"></span>
+          <span>Extracting medicines & instructions</span>
+        </div>
+        <div class="step-item" id="step3">
+          <span class="step-dot"></span>
+          <span>Translating to selected language</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ERROR / RETAKE PHOTO BANNER -->
+    <section id="errorSection" class="card error-card hidden">
+      <div class="error-icon-box">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      </div>
+      <h3 id="errorHeading" class="error-title">Please retake the photo</h3>
+      <p id="errorMessage" class="error-message">
+        We couldn't clearly read the medicine names or instructions from this document image.
+      </p>
+
+      <div class="retake-tips">
+        <h4>📸 Tips for a clear photo:</h4>
+        <ul>
+          <li>Place document on a flat surface with bright lighting.</li>
+          <li>Avoid shadows, reflections, and camera glare.</li>
+          <li>Ensure the entire prescription or summary page is inside the frame.</li>
+          <li>Hold phone steady to prevent blurriness.</li>
+        </ul>
+      </div>
+
+      <div class="error-actions">
+        <button type="button" id="retryUploadBtn" class="btn-primary">
+          📷 Take / Upload New Photo
+        </button>
+        <button type="button" id="fallbackSampleBtn" class="btn-secondary">
+          Explore with Sample Plan
+        </button>
+      </div>
+    </section>
+
+    <!-- RECOVERY PLAN DISPLAY SECTION -->
+    <section id="planSection" class="plan-section hidden">
+      
+      <!-- Top Action Toolbar -->
+      <div class="plan-toolbar">
+        <div class="toolbar-left">
+          <button type="button" id="readAloudBtn" class="btn-toolbar btn-read-aloud" aria-label="Read plan aloud">
+            <span class="tts-icon">🔊</span>
+            <span id="ttsBtnText">Read Aloud</span>
+          </button>
+          <button type="button" id="ttsStopBtn" class="btn-toolbar btn-stop hidden" aria-label="Stop audio">
+            <span>⏹️</span> Stop
+          </button>
+        </div>
+        <div class="toolbar-right">
+          <span id="planDemoBadge" class="badge-demo hidden">Demo Mode</span>
+          <button type="button" id="newPlanBtn" class="btn-toolbar btn-outline">
+            <span>+</span> Upload Another
+          </button>
+        </div>
+      </div>
+
+      <!-- TTS Live Status Indicator -->
+      <div id="ttsStatusBar" class="tts-status-bar hidden">
+        <span class="sound-wave">
+          <span></span><span></span><span></span><span></span>
+        </span>
+        <span id="ttsStatusText">Reading your recovery plan aloud...</span>
+      </div>
+
+      <!-- 1. SUMMARY CARD -->
+      <article class="card plan-card summary-card" id="summaryCard">
+        <div class="card-header-row">
+          <div class="patient-headline">
+            <span class="sub-label">Patient Recovery Guide</span>
+            <h2 id="patientNameHeader" class="patient-name">Patient Recovery Plan</h2>
+          </div>
+          <div class="meta-badges">
+            <span id="dischargeDateBadge" class="badge-neutral">Date: --</span>
+            <span id="docTypeBadge" class="badge-neutral">Discharge Summary</span>
+          </div>
+        </div>
+
+        <!-- Care Profile Tags -->
+        <div id="careProfileContainer" class="care-tags"></div>
+
+        <!-- Diagnosis & Procedure -->
+        <div class="diagnosis-block">
+          <div class="info-row">
+            <span class="info-label">Condition / Diagnosis:</span>
+            <span id="diagnosisText" class="info-value text-bold">--</span>
+          </div>
+          <div class="info-row" id="procedureRow">
+            <span class="info-label">Procedure Done:</span>
+            <span id="procedureText" class="info-value">--</span>
+          </div>
+        </div>
+
+        <!-- Plain Summary -->
+        <div class="summary-box">
+          <h4 class="summary-box-title">📋 Recovery Overview</h4>
+          <p id="plainSummaryText" class="plain-summary-body"></p>
+        </div>
+      </article>
+
+      <!-- 2. MEDICINE SCHEDULE -->
+      <article class="card plan-card" id="medicinesCard">
+        <div class="section-title-row">
+          <div class="title-with-icon">
+            <span class="section-icon">💊</span>
+            <div>
+              <h3>Medicine Schedule</h3>
+              <p class="section-subtext">Take medicines exactly as instructed below. Never stop without doctor's advice.</p>
+            </div>
+          </div>
+          <span id="medicineCountBadge" class="count-pill">0 Medicines</span>
+        </div>
+
+        <!-- Filter tabs for time of day -->
+        <div class="med-filters" id="medFilters">
+          <button type="button" class="med-filter-btn active" data-filter="all">All</button>
+          <button type="button" class="med-filter-btn" data-filter="morning">🌅 Morning</button>
+          <button type="button" class="med-filter-btn" data-filter="afternoon">☀️ Afternoon</button>
+          <button type="button" class="med-filter-btn" data-filter="evening_night">🌙 Night</button>
+          <button type="button" class="med-filter-btn" data-filter="as_needed">⚡ As Needed</button>
+        </div>
+
+        <div id="medicineList" class="med-list-container">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </article>
+
+      <!-- 3. FOLLOW-UPS & NEXT STEPS -->
+      <article class="card plan-card" id="followupsCard">
+        <div class="title-with-icon">
+          <span class="section-icon">🗓️</span>
+          <div>
+            <h3>Follow-ups & Next Steps</h3>
+            <p class="section-subtext">Upcoming visits and instructions from your discharge team.</p>
+          </div>
+        </div>
+
+        <div id="followupList" class="followup-list-container">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </article>
+
+      <!-- 4. WARNING SIGNS (RED FLAGS) -->
+      <article class="card plan-card alert-card" id="redFlagsCard">
+        <div class="title-with-icon">
+          <span class="section-icon red-icon">🚨</span>
+          <div>
+            <h3>Warning Signs (Red Flags)</h3>
+            <p class="section-subtext">Watch out for these symptoms. Seek prompt or emergency medical care if noticed.</p>
+          </div>
+        </div>
+
+        <div id="redFlagList" class="red-flag-container">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </article>
+
+      <!-- 5. "THINGS WE'RE NOT SURE ABOUT" CARD -->
+      <article class="card plan-card uncertainty-card" id="uncertaintyCard">
+        <div class="title-with-icon">
+          <span class="section-icon caution-icon">🔍</span>
+          <div>
+            <h3>Things We're Not Sure About</h3>
+            <p class="section-subtext">Important questions or unclear items. Please verify these with your doctor or pharmacist.</p>
+          </div>
+        </div>
+
+        <div class="uncertainty-body">
+          <div class="uncertain-section">
+            <h4 class="subhead-caution">❓ Unclear Handwriting or Instructions</h4>
+            <div id="uncertainItemList" class="uncertain-list">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+
+          <div class="missing-section">
+            <h4 class="subhead-caution">ℹ️ Missing Details from Document</h4>
+            <div id="missingInfoList" class="missing-list">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- 6. DAILY MONITORING & CARE INSTRUCTIONS -->
+      <article class="card plan-card" id="monitoringCard">
+        <div class="title-with-icon">
+          <span class="section-icon">🩺</span>
+          <div>
+            <h3>Home Monitoring & Care Advice</h3>
+            <p class="section-subtext">Daily checks and lifestyle precautions noted on your paperwork.</p>
+          </div>
+        </div>
+
+        <div id="monitoringList" class="monitoring-grid">
+          <!-- Populated dynamically -->
+        </div>
+
+        <div id="dietActivityBox" class="diet-box hidden">
+          <h4 class="diet-title">🥗 Diet & Activity Guidelines</h4>
+          <ul id="dietList" class="diet-list"></ul>
+        </div>
+
+        <div id="contactsBox" class="contacts-box hidden">
+          <h4 class="contacts-title">📞 Hospital & Emergency Contacts</h4>
+          <div id="contactList" class="contact-chips"></div>
+        </div>
+      </article>
+
+      <!-- Bottom Retake Action -->
+      <div class="bottom-action-container">
+        <button type="button" id="bottomNewPlanBtn" class="btn-secondary btn-block">
+          📷 Process Another Prescription / Discharge Document
+        </button>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- Footer Disclaimer -->
+  <footer class="app-footer">
+    <div class="footer-container">
+      <p class="medical-disclaimer">
+        ⚠️ <strong>Medical Disclaimer:</strong> Recovery Companion is an informational reading tool designed to help you organize hospital paperwork. It is not a doctor, does not diagnose, and does not provide medical advice. Always consult your healthcare provider with any medical questions.
+      </p>
+      <p class="copyright">Recovery Companion • Mobile-friendly Web App</p>
+    </div>
+  </footer>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
