@@ -4,6 +4,18 @@ An AI recovery companion that helps patients understand their hospital discharge
 
 Built for PromptWars x Error Zero (Theme: AI for Healthcare Accessibility).
 
+## Screenshots
+
+| Recovery plan | Medicine schedule |
+|---|---|
+| ![Recovery plan](docs/screenshot-1.png) | ![Medicine schedule](docs/screenshot-2.png) |
+
+| Follow-ups and warning signs | Uncertainty and home monitoring |
+|---|---|
+| ![Warning signs](docs/screenshot-3.png) | ![Monitoring](docs/screenshot-4.png) |
+
+(All patient data shown is fictional.)
+
 ## The problem
 
 Patients leave hospital with a dense, jargon-filled discharge summary and a few minutes of verbal instructions. Many, especially elderly patients and people who do not read English comfortably, misunderstand their medicines, miss warning signs, or forget follow-ups. This is a common cause of avoidable readmissions.
